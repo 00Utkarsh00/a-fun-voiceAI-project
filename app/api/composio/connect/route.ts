@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       const connectionRequest = await composio.connectedAccounts.link(
         userId,
         authConfigId,
-        { callbackUrl: `${getOrigin(request)}/?connected=${slug}` }
+        { callbackUrl: `${getOrigin(request)}/connected?app=${slug}` }
       );
 
       if (!connectionRequest.redirectUrl) {

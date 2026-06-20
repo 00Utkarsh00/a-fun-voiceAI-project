@@ -132,6 +132,22 @@ export default function App() {
     });
   }, [sendClientEvent]);
 
+  /** Merge newly-loaded Composio tools (deduped) into the live session. */
+  const addComposioTools = useCallback(
+    (tools: any[]) => {
+      let added = false;
+      for (const tool of tools ?? []) {
+        if (tool?.name && !loadedToolNames.current.has(tool.name)) {
+          loadedToolNames.current.add(tool.name);
+          loadedTools.current.push(tool);
+          added = true;
+        }
+      }
+      if (added) syncSessionTools();
+    },
+    [syncSessionTools]
+  );
+
   /** Open a canvas panel with a fresh token so its internal state resets. */
   const openCanvas = useCallback((next: Omit<CanvasState, "token">) => {
     canvasToken.current += 1;
@@ -194,14 +210,7 @@ export default function App() {
             };
           } else if (data.status === "connected") {
             setAuthRequest(null);
-            // Merge new tools, de-duplicating by name.
-            for (const tool of data.tools ?? []) {
-              if (tool?.name && !loadedToolNames.current.has(tool.name)) {
-                loadedToolNames.current.add(tool.name);
-                loadedTools.current.push(tool);
-              }
-            }
-            syncSessionTools();
+            addComposioTools(data.tools);
             toolCallOutput = {
               response: `CONNECTED. ${data.appName} tools are now available. Proceed to fulfil the user's original request by calling the appropriate tool now.`,
               status: "connected",
@@ -373,8 +382,46 @@ export default function App() {
       });
       sendClientEvent({ type: "response.create" });
     },
-    [sendClientEvent, syncSessionTools, openCanvas]
+    [sendClientEvent, addComposioTools, openCanvas]
   );
+
+  // When the connect popup reports success, load the app's tools and nudge the
+  // agent to continue — without the user losing the live session or this tab.
+  const loadAppAndContinue = useCallback(
+    async (appName: string) => {
+      try {
+        const res = await fetch("/api/composio/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ application_name: appName }),
+        });
+        const data = await res.json();
+        if (data.status === "connected") {
+          setAuthRequest(null);
+          addComposioTools(data.tools);
+          sendUserMessage(
+            `I've finished connecting my ${data.appName} account. Please go ahead with what I asked.`
+          );
+        }
+      } catch {
+        /* ignore — user can also just say "I'm done" */
+      }
+    },
+    [addComposioTools, sendUserMessage]
+  );
+
+  // Listen for the "connected" message posted by the popup callback page.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "composio-connected" && event.data.app) {
+        void loadAppAndContinue(String(event.data.app));
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [loadAppAndContinue]);
 
   const handleRealtimeMessage = useCallback(
     (eventMessage: MessageEvent) => {

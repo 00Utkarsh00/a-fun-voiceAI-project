@@ -20,6 +20,20 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ request, onClose }) => {
   if (!request) return null;
 
+  const openConnect = () => {
+    const w = 520;
+    const h = 700;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(
+      request.url,
+      "composio_oauth",
+      `popup=yes,width=${w},height=${h},left=${left},top=${top}`
+    );
+    // Popup blocked → fall back to a new tab so the user can still connect.
+    if (!popup) window.open(request.url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="auth-overlay" role="dialog" aria-modal="true">
       <div className="auth-card">
@@ -42,19 +56,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ request, onClose }) => {
           need to do this once.
         </p>
 
-        <a
-          className="auth-connect"
-          href={request.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <button type="button" className="auth-connect" onClick={openConnect}>
           Connect {request.appName}
           <ExternalLink size={16} />
-        </a>
+        </button>
 
         <p className="auth-hint">
-          Opens in a new tab. When you&apos;re finished, just say{" "}
-          <strong>&ldquo;I&apos;m done&rdquo;</strong> and I&apos;ll continue.
+          A secure window will open. Once you connect, it closes and I&apos;ll
+          pick up right where we left off.
         </p>
       </div>
     </div>

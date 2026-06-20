@@ -304,12 +304,14 @@ button {
   gap: 9px;
   width: 100%;
   padding: 14px 20px;
+  border: none;
   border-radius: 14px;
   color: #fff;
   background: var(--accent);
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
   box-shadow: 0 8px 22px rgba(79, 70, 229, 0.32);
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
@@ -996,6 +998,50 @@ button {
   .account-email {
     display: none;
   }
+}
+
+/* ------------------------------------------------- Connected (popup) page */
+
+.connected-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.connected-card {
+  text-align: center;
+  max-width: 340px;
+}
+.connected-check {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #34d399, #059669);
+  box-shadow: 0 8px 22px rgba(5, 150, 105, 0.35);
+}
+.connected-card h1 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.connected-card p {
+  margin: 0 0 18px;
+  color: var(--ink-muted);
+}
+.connected-link {
+  display: inline-block;
+  padding: 11px 20px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
